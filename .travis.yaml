@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker buiild -t pedrocbelem/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run pedrocbelem/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t pedrocbelem/multi-client ./client
+  - docker build -t pedrocbelem/multi-nginx ./nginx
+  - docker build -t pedrocbelem/multi-server ./server
+  - docker build -t pedrocbelem/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push pedrocbelem/multi-client
+  - docker push pedrocbelem/multi-nginx
+  - docker push pedrocbelem/multi-server
+  - docker push pedrocbelem/multi-worker
